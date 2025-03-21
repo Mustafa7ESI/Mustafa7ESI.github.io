@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>العد التنازلي للبكالوريا التجريبية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- استيراد مكتبة Chart.js فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+  <style>
+    /* خلفية الصفحة بصورة المدرسة مع تراكب أبيض شفاف */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      text-align: center;
+      background: url('school.jpg') no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      color: #333;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.85);
+      z-index: -1;
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    p.note {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .section {
+      background: #fff;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      max-width: 900px;
+    }
+    .section h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+    .charts-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .chart-box {
+      background: #f9f9f9;
+      width: 150px;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    canvas {
+      width: 150px !important;
+      height: 150px !important;
+    }
+    /* تنسيق لخانات الأسابيع المتبقية */
+    .week-slot {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      background: #fafafa;
+    }
+    .week-slot.inactive {
+      background: #ddd;
+    }
+    .week-slot h3 {
+      margin: 5px 0;
+      font-size: 18px;
+    }
+    .day-box {
+      display: inline-block;
+      width: 120px;
+      background: #fff;
+      margin: 5px;
+      padding: 5px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      font-size: 13px;
+    }
+    .day-box.active {
+      border: 2px solid #3498db;
+    }
+    .small-chart {
+      width: 80px !important;
+      height: 80px !important;
+      margin: 5px auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- العنوان ومعلومات التواريخ -->
+  <h1>العد التنازلي للبكالوريا التجريبية</h1>
+  <p class="note" id="datesInfo"></p>
+  
+  <!-- القسم 1: العد التنازلي للبكالوريا (أسابيع، أيام، ساعات، دقائق) -->
+  <div class="section" id="section1">
+    <h2>1. العد التنازلي للبكالوريا التجريبية</h2>
+    <div class="charts-container">
+      <div class="chart-box">
+        <canvas id="weeksChart"></canvas>
+        <p>عدد الأسابيع المتبقية</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="daysChart"></canvas>
+        <p>عدد الأيام المتبقية</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="hoursChart"></canvas>
+        <p>عدد الساعات المتبقية</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="minutesChart"></canvas>
+        <p>عدد الدقائق المتبقية</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- القسم 2: الأسابيع المتبقية مع تفاصيل كل أسبوع -->
+  <div class="section" id="section2">
+    <h2>2. الأسابيع المتبقية</h2>
+    <div id="weeksSlots"></div>
+  </div>
+  
+  <!-- القسم 3: العد التنازلي لهذا الأسبوع (من السبت إلى الجمعة) -->
+  <div class="section" id="section3">
+    <h2>3. العد التنازلي لهذا الأسبوع</h2>
+    <div class="charts-container">
+      <div class="chart-box">
+        <canvas id="weekLeftDaysChart"></canvas>
+        <p>أيام</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="weekLeftHoursChart"></canvas>
+        <p>ساعات</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="weekLeftMinutesChart"></canvas>
+        <p>دقائق</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- القسم 4: العد التنازلي الكلي حتى موعد الامتحان -->
+  <div class="section" id="section4">
+    <h2>4. العد التنازلي الكلي حتى موعد الامتحان</h2>
+    <div class="charts-container">
+      <div class="chart-box">
+        <canvas id="totalDaysChart"></canvas>
+        <p>أيام</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="totalHoursChart"></canvas>
+        <p>ساعات</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="totalMinutesChart"></canvas>
+        <p>دقائق</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="totalSecondsChart"></canvas>
+        <p>ثواني</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    /*******************************************************
+     *            1) مكون (Plugin) لعرض النص في المركز    *
+     *******************************************************/
+    const centerTextPlugin = {
+      id: 'centerTextPlugin',
+      afterDatasetsDraw(chart, args, options) {
+        // إذا لم يتم تحديد القيمة النصية في config، نتجاهل
+        if (!chart.config._centerText) return;
+        
+        const { ctx, chartArea: { left, right, top, bottom } } = chart;
+        const text = chart.config._centerText;
+        
+        // نحسب مركز الدائرة
+        const xCenter = (left + right) / 2;
+        const yCenter = (top + bottom) / 2;
+        
+        ctx.save();
+        ctx.fillStyle = options.color || '#000';
+        ctx.font = (options.fontSize || 20) + 'px ' + (options.fontFamily || 'Arial');
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, xCenter, yCenter);
+        ctx.restore();
+      }
+    };
+
+    // نسجّل المكوّن في Chart.js
+    Chart.register(centerTextPlugin);
+
+    /*******************************************************
+     *            2) إعدادات التاريخ والتنسيقات            *
+     *******************************************************/
+    const EXAM_DATE = new Date("2025-05-18T08:00:00");
+
+    function getMonthName(m) {
+      const months = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+      return months[m-1];
+    }
+    function formatGregorian(date) {
+      const d = date.getDate();
+      const m = date.getMonth() + 1;
+      const y = date.getFullYear();
+      return `${d} ${getMonthName(m)} ${y}`;
+    }
+    function getHijriMonthName(m) {
+      const months = ["محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"];
+      return months[m-1];
+    }
+    function convertToHijri(gDate) {
+      const day = gDate.getDate();
+      const month = gDate.getMonth() + 1;
+      const year = gDate.getFullYear();
+      const a = Math.floor((14 - month) / 12);
+      const y = year + 4800 - a;
+      const m = month + 12 * a - 3;
+      const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y 
+                 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+      const islamic = jd - 1948440 + 10632;
+      const n = Math.floor((islamic - 1) / 10631);
+      let r = islamic - 10631 * n + 354;
+      const j = (Math.floor((10985 - r) / 5316)) * (Math.floor((50 * r) / 17719))
+                + (Math.floor(r / 5670)) * (Math.floor((43 * r) / 15238));
+      r = r - Math.floor((30 - j) / 15) * (Math.floor((17719 * j) / 50))
+          - Math.floor(j / 16) * (Math.floor((15238 * j) / 43)) + 29;
+      const mIslamic = Math.floor((24 * r) / 709);
+      const dIslamic = r - Math.floor((709 * mIslamic) / 24);
+      const yIslamic = 30 * n + j - 30;
+      return `${dIslamic} ${getHijriMonthName(mIslamic)} ${yIslamic}`;
+    }
+    function updateDatesInfo() {
+      const today = new Date();
+      document.getElementById("datesInfo").innerText =
+        `تاريخ اليوم: ${formatGregorian(today)} الموافق ${convertToHijri(today)} | تاريخ البكالوريا: ${formatGregorian(EXAM_DATE)} الموافق ${convertToHijri(EXAM_DATE)}`;
+    }
+    updateDatesInfo();
+
+    /*******************************************************
+     *      3) دوال حساب الفروق الزمنية للأقسام المختلفة  *
+     *******************************************************/
+    // القسم 1: (أسابيع، أيام، ساعات، دقائق)
+    function getExamDiff() {
+      const now = new Date();
+      let diff = EXAM_DATE - now;
+      if(diff < 0) diff = 0;
+      const totalSec = Math.floor(diff / 1000);
+      const weeks = Math.floor(totalSec / (3600 * 24 * 7));
+      const days = Math.floor(totalSec / (3600 * 24)) % 7;
+      const hours = Math.floor((totalSec % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      return { weeks, days, hours, minutes };
+    }
+    // القسم 3: (هذا الأسبوع) أيام، ساعات، دقائق
+    function getThisWeekDiff() {
+      const now = new Date();
+      let day = now.getDay(); // الأحد=0 ... السبت=6
+      let diffToFriday = 5 - ((day + 1) % 7);
+      if(diffToFriday < 0) diffToFriday += 7;
+      const endOfWeek = new Date(now);
+      endOfWeek.setDate(now.getDate() + diffToFriday);
+      endOfWeek.setHours(23,59,59,999);
+      let diff = endOfWeek - now;
+      if(diff < 0) diff = 0;
+      const totalSec = Math.floor(diff / 1000);
+      const days = Math.floor(totalSec / (3600 * 24));
+      const hours = Math.floor((totalSec % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      return { days, hours, minutes };
+    }
+    // القسم 4: العد الكلي (أيام، ساعات، دقائق، ثواني)
+    function getTotalDiff() {
+      const now = new Date();
+      let diff = EXAM_DATE - now;
+      if(diff < 0) diff = 0;
+      const totalSec = Math.floor(diff / 1000);
+      const days = Math.floor(totalSec / (3600 * 24));
+      const hours = Math.floor((totalSec % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+      return { days, hours, minutes, seconds };
+    }
+
+    /*******************************************************
+     * 4) إنشاء الدوائر (المخططات) + تخزين نص المركز فيها
+     *******************************************************/
+    // سنخزن داخل config._centerText النص الذي سيُرسم في المركز
+    function createDoughnut(canvasId, maxValue, color, unit) {
+      const ctx = document.getElementById(canvasId);
+      const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [0, maxValue],
+            backgroundColor: [color, '#ecf0f1'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+          }
+        }
+      });
+      // نخزن الوحدة + قيمة ابتدائية 0 في config._centerText
+      chart.config._unit = unit;
+      chart.config._centerText = `0 ${unit}`;
+      return chart;
+    }
+
+    // دالة تحديث الدائرة
+    function updateDoughnut(chart, value, maxValue) {
+      chart.data.datasets[0].data = [value, Math.max(maxValue - value, 0)];
+      chart.config._centerText = `${value} ${chart.config._unit}`;
+      chart.update();
+    }
+
+    // الألوان للوحدات
+    const colorWeeks   = "#f1c40f"; // أصفر
+    const colorDays    = "#e67e22"; // برتقالي
+    const colorHours   = "#e74c3c"; // أحمر
+    const colorMinutes = "#27ae60"; // أخضر
+    const colorSeconds = "#3498db"; // أزرق
+
+    // القسم 1: (أسابيع، أيام، ساعات، دقائق)
+    const weeksChart   = createDoughnut('weeksChart',    52,   colorWeeks,   'أسبوع');
+    const daysChart    = createDoughnut('daysChart',     7,    colorDays,    'يوم');
+    const hoursChart   = createDoughnut('hoursChart',    24,   colorHours,   'ساعة');
+    const minutesChart = createDoughnut('minutesChart',  60,   colorMinutes, 'دقيقة');
+
+    // القسم 3: (هذا الأسبوع) أيام، ساعات، دقائق
+    const weekLeftDaysChart    = createDoughnut('weekLeftDaysChart',    7,   colorDays,    'يوم');
+    const weekLeftHoursChart   = createDoughnut('weekLeftHoursChart',   24,  colorHours,   'ساعة');
+    const weekLeftMinutesChart = createDoughnut('weekLeftMinutesChart', 60,  colorMinutes, 'دقيقة');
+
+    // القسم 4: (العد الكلي) أيام، ساعات، دقائق، ثواني
+    const totalDaysChart    = createDoughnut('totalDaysChart',    365, colorDays,    'يوم');
+    const totalHoursChart   = createDoughnut('totalHoursChart',   24,  colorHours,   'ساعة');
+    const totalMinutesChart = createDoughnut('totalMinutesChart', 60,  colorMinutes, 'دقيقة');
+    const totalSecondsChart = createDoughnut('totalSecondsChart', 60,  colorSeconds, 'ثانية');
+
+    /*******************************************************
+     *        5) القسم 2: الأسابيع المتبقية (الأيام)      *
+     *******************************************************/
+    function updateWeeksSlots() {
+      const container = document.getElementById("weeksSlots");
+      container.innerHTML = "";
+      const now = new Date();
+      let diffMs = EXAM_DATE - now;
+      if(diffMs < 0) diffMs = 0;
+      const totalDaysLeft = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const totalWeeksLeft = Math.floor(totalDaysLeft / 7);
+      
+      for(let w = 0; w <= totalWeeksLeft; w++) {
+        const weekSlot = document.createElement("div");
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - ((now.getDay() + 1) % 7) + (w * 7));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        const isCurrentWeek = (now >= weekStart && now <= weekEnd);
+        weekSlot.className = "week-slot" + (isCurrentWeek ? "" : " inactive");
+
+        const weekTitle = document.createElement("h3");
+        weekTitle.innerText = isCurrentWeek
+          ? `الأسبوع (${w + 1}) - الحالي: ${formatGregorian(weekStart)} | ${convertToHijri(weekStart)}`
+          : `الأسبوع (${w + 1}): ${formatGregorian(weekStart)} | ${convertToHijri(weekStart)}`;
+        weekSlot.appendChild(weekTitle);
+
+        const daysContainer = document.createElement("div");
+        for(let d = 0; d < 7; d++) {
+          const dayBox = document.createElement("div");
+          dayBox.className = "day-box";
+          const dayDate = new Date(weekStart);
+          dayDate.setDate(weekStart.getDate() + d);
+
+          const gDate = formatGregorian(dayDate);
+          const hDate = convertToHijri(dayDate);
+          dayBox.innerHTML = `<strong>${["السبت","الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"][d]}</strong><br>
+                              ${gDate}<br>
+                              ${hDate}<br>`;
+
+          if(dayDate.toDateString() === now.toDateString()){
+            dayBox.classList.add("active");
+            const endOfDay = new Date(now);
+            endOfDay.setHours(23,59,59,999);
+            let diffDay = endOfDay - now;
+            if(diffDay < 0) diffDay = 0;
+            const totalSec = Math.floor(diffDay / 1000);
+            const hrs = Math.floor((totalSec % (3600 * 24)) / 3600);
+            const mins = Math.floor((totalSec % 3600) / 60);
+            dayBox.innerHTML += `<br><small>ساعات: ${hrs} | دقائق: ${mins}</small>`;
+          } else {
+            dayBox.innerHTML += `<br><small>ساعات: -- | دقائق: --</small>`;
+          }
+          daysContainer.appendChild(dayBox);
+        }
+        weekSlot.appendChild(daysContainer);
+        container.appendChild(weekSlot);
+      }
+    }
+
+    /*******************************************************
+     *      6) التحديث المستمر: نرسم النص في المركز       *
+     *******************************************************/
+    function updateAll() {
+      // القسم 1
+      const eDiff = getExamDiff();
+      updateDoughnut(weeksChart,   eDiff.weeks,   52);
+      updateDoughnut(daysChart,    eDiff.days,    7);
+      updateDoughnut(hoursChart,   eDiff.hours,   24);
+      updateDoughnut(minutesChart, eDiff.minutes, 60);
+
+      // القسم 3
+      const wDiff = getThisWeekDiff();
+      updateDoughnut(weekLeftDaysChart,    wDiff.days,    7);
+      updateDoughnut(weekLeftHoursChart,   wDiff.hours,   24);
+      updateDoughnut(weekLeftMinutesChart, wDiff.minutes, 60);
+
+      // القسم 4
+      const tDiff = getTotalDiff();
+      updateDoughnut(totalDaysChart,    tDiff.days,    365);
+      updateDoughnut(totalHoursChart,   tDiff.hours,   24);
+      updateDoughnut(totalMinutesChart, tDiff.minutes, 60);
+      updateDoughnut(totalSecondsChart, tDiff.seconds, 60);
+
+      // القسم 2
+      updateWeeksSlots();
+    }
+
+    // استدعاء التحديث لأول مرة
+    updateAll();
+    // إعادة التحديث كل ثانية
+    setInterval(updateAll, 1000);
+  </script>
+</body>
+</html>
